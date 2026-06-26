@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talent Calibration Simulator - Enhanced</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.97);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.2rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .header p  { font-size: 1rem; opacity: 0.92; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+
+        /* 메인 레이아웃 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            padding: 24px;
+            align-items: start;
+        }
+        @media (max-width: 860px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+
+        /* ── 왼쪽 패널 ── */
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 22px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .control-panel h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 7px; }
+        .form-group label { font-weight: 600; color: #495057; font-size: 0.93rem; }
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 11px 13px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.25s;
+        }
+        .form-group select:focus,
+        .form-group input:focus { outline: none; border-color: #4facfe; }
+
+        /* 자동완성 */
+        .autocomplete-wrapper { position: relative; }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: white;
+            border: 2px solid #4facfe;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 200;
+            display: none;
+        }
+        .autocomplete-list.show { display: block; }
+        .autocomplete-item {
+            padding: 10px 13px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.active-item { background: #e8f4ff; }
+        .autocomplete-item .sub { font-size: 0.78rem; color: #999; margin-top: 2px; }
+
+        /* 선택된 직원 미리보기 */
+        .selected-card {
+            background: white;
+            border: 2px solid #4facfe;
+            border-radius: 12px;
+            padding: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .selected-card.show { display: block; }
+        .card-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .tag {
+            background: #e8f4ff; color: #4facfe;
+            border-radius: 20px; padding: 3px 11px;
+            font-size: 0.76rem; font-weight: 600;
+        }
+        .tag.grade-s { background: #fff3cd; color: #856404; }
+        .tag.grade-a { background: #d1f2eb; color: #0e6655; }
+        .tag.grade-b { background: #d6eaf8; color: #1a5276; }
+        .tag.grade-c { background: #fdebd0; color: #784212; }
+        .tag.grade-d { background: #fadbd8; color: #922b21; }
+
+        .analyze-btn {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,172,254,0.4); }
+        .analyze-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .error-msg {
+            background: #fff5f5; color: #c0392b;
+            border: 1px solid #f5c6cb; border-radius: 8px;
+            padding: 10px 13px; font-size: 0.88rem; display: none;
+        }
+        .error-msg.show { display: block; }
+
+        /* ── 계열사 구성원 목록 ── */
+        .member-list-section {
+            border-top: 1px solid #dee2e6;
+            padding-top: 14px;
+        }
+        .member-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .member-list-header span {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.93rem;
+        }
+        .member-count-badge {
+            background: #4facfe;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .member-list::-webkit-scrollbar { width: 5px; }
+        .member-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
+
+        .member-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border: 1.5px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.18s;
+            font-size: 0.88rem;
+        }
+        .member-chip:hover { border-color: #4facfe; background: #f0f8ff; }
+        .member-chip.selected { border-color: #4facfe; background: #e8f4ff; font-weight: 700; }
+        .member-chip .chip-name { font-weight: 600; }
+        .member-chip .chip-meta { font-size: 0.76rem; color: #888; margin-top: 2px; }
+        .member-chip .chip-grades { display: flex; gap: 4px; }
+        .chip-grade {
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .chip-grade.perf { background: #fff3cd; color: #856404; }
+        .chip-grade.pot  { background: #d1f2eb; color: #0e6655; }
+
+        .member-list-empty {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.88rem;
+            padding: 16px 0;
+            font-style: italic;
+        }
+
+        /* ── 오른쪽 패널 ── */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .matrix-section {
+            background: white;
+            border-radius: 15px;
+            padding: 22px;
+            border: 1px solid #e9ecef;
+        }
+        .matrix-section > h2 {
+            color: #495057; font-size: 1.2rem;
+            text-align: center; margin-bottom: 6px;
+        }
+        .matrix-hint {
+            text-align: center;
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-bottom: 18px;
+        }
+
+        /* 9-Box 그리드 */
+        .matrix-container {
+            display: grid;
+            grid-template-columns: 48px 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 36px;
+            gap: 8px;
+            max-width: 540px;
+            margin: 0 auto 24px;
+        }
+        .matrix-box {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 96px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #6c757d;
+            padding: 8px 6px;
+            line-height: 1.3;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+        }
+        .matrix-box:hover {
+            border-color: #4facfe;
+            background: linear-gradient(135deg, #eef6ff, #dbeeff);
+            transform: scale(1.03);
+        }
+        .matrix-box.active {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-color: #f39c12;
+            color: #333;
+            transform: scale(1.08);
+            box-shadow: 0 10px 28px rgba(243,156,18,0.45);
+            z-index: 2;
+        }
+        /* 박스 클릭 하이라이트 (파란색 테두리) */
+        .matrix-box.box-selected {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79,172,254,0.3);
+        }
+        .matrix-box .emoji { font-size: 1.35rem; margin-bottom: 4px; }
+
+        /* 박스 내 인원 수 뱃지 */
+        .box-count {
+            position: absolute;
+            top: 5px; right: 7px;
+            background: rgba(0,0,0,0.12);
+            color: inherit;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .matrix-box.active .box-count { background: rgba(0,0,0,0.15); }
+
+        .axis-label-y {
+            grid-row: 1/4; grid-column: 1;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: #6c757d;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .axis-label-x {
+            grid-row: 4; grid-column: 2/5;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: #6c757d;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 결과 카드 */
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border-radius: 15px; padding: 22px;
+            display: none; animation: fadeIn 0.4s ease;
+        }
+        .result-card.show { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+        .result-header .big-emoji { font-size: 2.4rem; }
+        .result-header-text h3 { font-size: 1.25rem; margin-bottom: 4px; }
+        .result-header-text .emp-info { opacity: 0.88; font-size: 0.88rem; line-height: 1.5; }
+        .grade-badges { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .grade-badge {
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 0.82rem; font-weight: 700;
+            background: rgba(255,255,255,0.22);
+        }
+        .description-box {
+            background: rgba(255,255,255,0.12); border-radius: 10px;
+            padding: 13px 15px; font-size: 0.92rem; line-height: 1.65; margin-bottom: 16px;
+        }
+        .strategies h4 { font-size: 1.05rem; margin-bottom: 10px; }
+        .strategy-list { display: grid; gap: 8px; }
+        .strategy-item {
+            background: rgba(255,255,255,0.12);
+            padding: 10px 14px; border-radius: 8px;
+            border-left: 4px solid #ffd700;
+            font-size: 0.88rem; line-height: 1.5;
+        }
+
+        /* ── 박스 클릭 시 인원 목록 패널 ── */
+        .box-people-panel {
+            background: white;
+            border-radius: 15px;
+            border: 2px solid #4facfe;
+            padding: 20px;
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+        .box-people-panel.show { display: block; }
+        .box-people-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .box-people-header h3 { font-size: 1.05rem; color: #333; }
+        .close-panel-btn {
+            background: none; border: none; font-size: 1.3rem;
+            cursor: pointer; color: #aaa; line-height: 1;
+            padding: 0 4px;
+        }
+        .close-panel-btn:hover { color: #555; }
+
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .people-card {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .people-card:hover { border-color: #4facfe; background: #eef6ff; }
+        .people-card .pc-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 5px; }
+        .people-card .pc-meta { font-size: 0.78rem; color: #777; line-height: 1.5; }
+        .people-card .pc-grades { display: flex; gap: 5px; margin-top: 6px; }
+        .pc-grade {
+            border-radius: 5px; padding: 2px 8px;
+            font-size: 0.72rem; font-weight: 700;
+        }
+        .pc-grade.perf { background: #fff3cd; color: #856404; }
+        .pc-grade.pot  { background: #d1f2eb; color: #0e6655; }
+        .people-empty {
+            text-align: center; color: #aaa;
+            font-style: italic; padding: 20px 0; font-size: 0.9rem;
+            grid-column: 1/-1;
+        }
+
+        /* 이력 섹션 */
+        .history-section {
+            margin: 0 24px 24px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        .history-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 14px;
+        }
+        .history-header h3 { color: #495057; font-size: 1.05rem; }
+        .clear-btn {
+            padding: 7px 13px; background: #dc3545;
+            color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 0.82rem; font-family: inherit;
+        }
+        .clear-btn:hover { background: #c82333; }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+            gap: 10px;
+        }
+        .history-item {
+            background: white; padding: 13px 15px;
+            border-radius: 8px; border-left: 4px solid #4facfe;
+        }
+        .history-item .h-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
+        .history-item .h-box  { color: #555; font-size: 0.83rem; margin-bottom: 4px; }
+        .history-item .h-meta { color: #999; font-size: 0.76rem; }
+        .empty-history {
+            text-align: center; color: #6c757d;
+            font-style: italic; padding: 16px; font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="header">
+        <h1>🎯 Talent Calibration Simulator</h1>
+        <p>실제 직원 데이터를 기반으로 계열사와 이름을 선택하면 9-Box Matrix 상의 위치와 맞춤형 육성 전략을 확인할 수 있습니다.</p>
+    </div>
+
+    <!-- 메인 -->
+    <div class="main-content">
+
+        <!-- ── 왼쪽 패널 ── -->
+        <div class="control-panel">
+            <h2>🔍 직원 검색</h2>
+
+            <!-- 계열사 선택 -->
+            <div class="form-group">
+                <label for="companySelect">계열사 선택</label>
+                <select id="companySelect" onchange="onCompanyChange()">
+                    <option value="">전체 계열사</option>
+                    <option value="소나무전자">소나무전자</option>
+                    <option value="은행나무은행">은행나무은행</option>
+                    <option value="단풍증권">단풍증권</option>
+                    <option value="느티실업">느티실업</option>
+                </select>
+            </div>
+
+            <!-- 이름 검색 -->
+            <div class="form-group">
+                <label for="nameInput">구성원 이름 검색</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="nameInput"
+                        placeholder="이름을 입력하세요 (예: 이백합)"
+                        autocomplete="off"
+                        oninput="onNameInput()"
+                        onkeydown="onNameKeydown(event)">
+                    <div class="autocomplete-list" id="autocompleteList"></div>
+                </div>
+            </div>
+
+            <!-- 선택된 직원 미리보기 -->
+            <div class="selected-card" id="selectedCard">
+                <div class="card-name" id="cardName"></div>
+                <div class="card-tags" id="cardTags"></div>
+            </div>
+
+            <div class="error-msg" id="errorMsg">해당 이름의 구성원을 찾을 수 없습니다.</div>
+
+            <button class="analyze-btn" id="analyzeBtn" onclick="analyzeTalent()" disabled>
+                🚀 인재 분석 실행
+            </button>
+
+            <!-- ── 계열사 구성원 목록 ── -->
+            <div class="member-list-section" id="memberListSection" style="display:none;">
+                <div class="member-list-header">
+                    <span id="memberListTitle">구성원 목록</span>
+                    <span class="member-count-badge" id="memberCountBadge">0명</span>
+                </div>
+                <div class="member-list" id="memberList"></div>
+            </div>
+        </div>
+
+        <!-- ── 오른쪽 패널 ── -->
+        <div class="right-panel">
+
+            <!-- 9-Box Matrix -->
+            <div class="matrix-section">
+                <h2>📊 9-Box Matrix</h2>
+                <p class="matrix-hint">박스를 클릭하면 해당 인원을 확인할 수 있습니다</p>
+
+                <div class="matrix-container">
+                    <div class="axis-label-y">잠재력 (Potential) ↑</div>
+
+                    <!-- 높은 잠재력 행 -->
+                    <div class="matrix-box" id="box-low-high"    onclick="onBoxClick('low','high')">
+                        <span class="box-count" id="cnt-low-high">0</span>
+                        <div class="emoji">🌱</div><div>원석<br>(Rough Diamond)</div>
+                    </div>
+                    <div class="matrix-box" id="box-medium-high" onclick="onBoxClick('medium','high')">
+                        <span class="box-count" id="cnt-medium-high">0</span>
+                        <div class="emoji">⭐</div><div>성장 리더<br>(Future Star)</div>
+                    </div>
+                    <div class="matrix-box" id="box-high-high"   onclick="onBoxClick('high','high')">
+                        <span class="box-count" id="cnt-high-high">0</span>
+                        <div class="emoji">👑</div><div>차세대 리더<br>(Top Talent)</div>
+                    </div>
+
+                    <!-- 중간 잠재력 행 -->
+                    <div class="matrix-box" id="box-low-medium"    onclick="onBoxClick('low','medium')">
+                        <span class="box-count" id="cnt-low-medium">0</span>
+                        <div class="emoji">❓</div><div>딜레마<br>(Inconsistent)</div>
+                    </div>
+                    <div class="matrix-box" id="box-medium-medium" onclick="onBoxClick('medium','medium')">
+                        <span class="box-count" id="cnt-medium-medium">0</span>
+                        <div class="emoji">🔧</div><div>핵심 실무자<br>(Core Player)</div>
+                    </div>
+                    <div class="matrix-box" id="box-high-medium"   onclick="onBoxClick('high','medium')">
+                        <span class="box-count" id="cnt-high-medium">0</span>
+                        <div class="emoji">💪</div><div>우수 성과자<br>(High Performer)</div>
+                    </div>
+
+                    <!-- 낮은 잠재력 행 -->
+                    <div class="matrix-box" id="box-low-low"    onclick="onBoxClick('low','low')">
+                        <span class="box-count" id="cnt-low-low">0</span>
+                        <div class="emoji">⚠️</div><div>저성과자<br>(Under Performer)</div>
+                    </div>
+                    <div class="matrix-box" id="box-medium-low" onclick="onBoxClick('medium','low')">
+                        <span class="box-count" id="cnt-medium-low">0</span>
+                        <div class="emoji">🔒</div><div>안정 실무자<br>(Steady Worker)</div>
+                    </div>
+                    <div class="matrix-box" id="box-high-low"   onclick="onBoxClick('high','low')">
+                        <span class="box-count" id="cnt-high-low">0</span>
+                        <div class="emoji">🏆</div><div>전문가<br>(Expert)</div>
+                    </div>
+
+                    <div class="axis-label-x">성과 (Performance) →</div>
+                </div>
+
+                <!-- 결과 카드 -->
+                <div class="result-card" id="resultCard">
+                    <div class="result-header">
+                        <div class="big-emoji" id="resultEmoji"></div>
+                        <div class="result-header-text">
+                            <h3 id="resultTitle"></h3>
+                            <div class="emp-info" id="resultEmpInfo"></div>
+                        </div>
+                    </div>
+                    <div class="grade-badges" id="gradeBadges"></div>
+                    <div class="description-box" id="resultDescription"></div>
+                    <div class="strategies">
+                        <h4>💡 추천 육성 전략</h4>
+                        <div class="strategy-list" id="strategyList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 박스 클릭 인원 목록 패널 -->
+            <div class="box-people-panel" id="boxPeoplePanel">
+                <div class="box-people-header">
+                    <h3 id="boxPeopleTitle"></h3>
+                    <button class="close-panel-btn" onclick="closeBoxPanel()">✕</button>
+                </div>
+                <div class="people-grid" id="peopleGrid"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 조회 이력 -->
+    <div class="history-section">
+        <div class="history-header">
+            <h3>📁 조회 이력</h3>
+            <button class="clear-btn" onclick="clearHistory()">이력 삭제</button>
+        </div>
+        <div class="history-grid" id="historyList">
+            <div class="empty-history">아직 조회 이력이 없습니다.</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* =====================================================
+   직원 데이터 (100명 전체)
+===================================================== */
+const EMPLOYEES = [
+  {company:"소나무전자",  name:"이백합",         hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"디렉터", role:"본부장", job:"콘텐츠 마케팅",    perf:"A", pot:"A"},
+  {company:"은행나무은행",name:"박해바라기",      hq:"세일즈본부",  team:"국내B2B팀",          grade:"디렉터", role:"본부장", job:"B2B 영업",         perf:"C", pot:"C"},
+  {company:"은행나무은행",name:"조브로콜리",      hq:"세일즈본부",  team:"해외B2G팀",          grade:"디렉터", role:"본부장", job:"글로벌 공공영업",  perf:"C", pot:"B"},
+  {company:"은행나무은행",name:"윤살구",          hq:"세일즈본부",  team:"해외B2B팀",          grade:"임원",   role:"임원",   job:"해외영업",         perf:"C", pot:"A"},
+  {company:"단풍증권",    name:"윤딸기",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"임원",   role:"임원",   job:"CRM 마케팅",       perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"김국화",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"임원",   role:"임원",   job:"콘텐츠 마케팅",    perf:"C", pot:"B"},
+  {company:"소나무전자",  name:"강석류",          hq:"경영본부",    team:"총무팀",             grade:"임원",   role:"임원",   job:"총무",             perf:"B", pot:"A"},
+  {company:"은행나무은행",name:"이목련",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"임원",   role:"임원",   job:"CRM 마케팅",       perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"장해바라기",      hq:"세일즈본부",  team:"국내B2G팀",          grade:"매니저", role:"팀원",   job:"공공영업",         perf:"B", pot:"B"},
+  {company:"단풍증권",    name:"박배",            hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀원",   job:"백엔드 개발",      perf:"B", pot:"A"},
+  {company:"은행나무은행",name:"최사과",          hq:"세일즈본부",  team:"국내B2B팀",          grade:"프로",   role:"팀원",   job:"B2B 영업",         perf:"C", pot:"B"},
+  {company:"단풍증권",    name:"김포도",          hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀원",   job:"백엔드 개발",      perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"정토마토",        hq:"경영본부",    team:"총무팀",             grade:"프로",   role:"팀원",   job:"총무",             perf:"C", pot:"B"},
+  {company:"은행나무은행",name:"정국화",          hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀원",   job:"백엔드 개발",      perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"강키위",          hq:"테크본부",    team:"PM팀",               grade:"프로",   role:"팀원",   job:"PM",               perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"박튤립",          hq:"경영본부",    team:"재무팀",             grade:"매니저", role:"팀원",   job:"재무",             perf:"D", pot:"A"},
+  {company:"소나무전자",  name:"정유자",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"매니저", role:"팀원",   job:"콘텐츠 마케팅",    perf:"A", pot:"C"},
+  {company:"은행나무은행",name:"강포도",          hq:"경영본부",    team:"경영기획팀",         grade:"프로",   role:"팀원",   job:"전략기획",         perf:"B", pot:"A"},
+  {company:"은행나무은행",name:"김아스파라거스",  hq:"경영본부",    team:"인사팀",             grade:"프로",   role:"팀원",   job:"HRBP",             perf:"B", pot:"A"},
+  {company:"은행나무은행",name:"강국화",          hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀원",   job:"백엔드 개발",      perf:"C", pot:"B"},
+  {company:"소나무전자",  name:"장라일락",        hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"프로",   role:"팀원",   job:"콘텐츠 마케팅",    perf:"B", pot:"B"},
+  {company:"단풍증권",    name:"강코스모스",      hq:"마케팅본부",  team:"브랜드마케팅팀",     grade:"프로",   role:"팀원",   job:"브랜드 마케팅",    perf:"B", pot:"B"},
+  {company:"느티실업",    name:"조카라",          hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"B", pot:"B"},
+  {company:"느티실업",    name:"이양배추",        hq:"세일즈본부",  team:"해외B2G팀",          grade:"매니저", role:"팀원",   job:"글로벌 공공영업",  perf:"A", pot:"B"},
+  {company:"소나무전자",  name:"윤감자",          hq:"경영본부",    team:"재무팀",             grade:"프로",   role:"팀원",   job:"재무",             perf:"A", pot:"S"},
+  {company:"느티실업",    name:"조미나리",        hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"프로",   role:"팀원",   job:"퍼포먼스 마케팅",  perf:"B", pot:"C"},
+  {company:"은행나무은행",name:"윤딸기",          hq:"경영본부",    team:"경영기획팀",         grade:"프로",   role:"팀원",   job:"전략기획",         perf:"A", pot:"B"},
+  {company:"소나무전자",  name:"김토마토",        hq:"테크본부",    team:"PM팀",               grade:"프로",   role:"팀원",   job:"PM",               perf:"C", pot:"B"},
+  {company:"느티실업",    name:"박아스파라거스",  hq:"경영본부",    team:"총무팀",             grade:"프로",   role:"팀원",   job:"총무",             perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"조토마토",        hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀원",   job:"백엔드 개발",      perf:"C", pot:"D"},
+  {company:"은행나무은행",name:"정살구",          hq:"세일즈본부",  team:"국내B2G팀",          grade:"프로",   role:"팀원",   job:"공공영업",         perf:"C", pot:"A"},
+  {company:"단풍증권",    name:"김포도",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"프로",   role:"팀원",   job:"CRM 마케팅",       perf:"D", pot:"B"},
+  {company:"은행나무은행",name:"강무",            hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"프로",   role:"팀원",   job:"퍼포먼스 마케팅",  perf:"C", pot:"B"},
+  {company:"소나무전자",  name:"이고구마",        hq:"경영본부",    team:"인사팀",             grade:"매니저", role:"팀원",   job:"HRBP",             perf:"B", pot:"C"},
+  {company:"단풍증권",    name:"조배추",          hq:"세일즈본부",  team:"해외B2G팀",          grade:"프로",   role:"팀원",   job:"글로벌 공공영업",  perf:"B", pot:"S"},
+  {company:"느티실업",    name:"박튤립",          hq:"테크본부",    team:"PM팀",               grade:"매니저", role:"팀원",   job:"PM",               perf:"C", pot:"A"},
+  {company:"은행나무은행",name:"김딸기",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"프로",   role:"팀원",   job:"CRM 마케팅",       perf:"A", pot:"B"},
+  {company:"은행나무은행",name:"조아스파라거스",  hq:"경영본부",    team:"경영기획팀",         grade:"프로",   role:"팀원",   job:"전략기획",         perf:"A", pot:"B"},
+  {company:"느티실업",    name:"이수박",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"매니저", role:"팀원",   job:"콘텐츠 마케팅",    perf:"C", pot:"B"},
+  {company:"단풍증권",    name:"박부추",          hq:"세일즈본부",  team:"해외B2B팀",          grade:"프로",   role:"팀원",   job:"해외영업",         perf:"C", pot:"A"},
+  {company:"단풍증권",    name:"조안개",          hq:"마케팅본부",  team:"브랜드마케팅팀",     grade:"프로",   role:"팀원",   job:"브랜드 마케팅",    perf:"C", pot:"B"},
+  {company:"은행나무은행",name:"윤딸기",          hq:"세일즈본부",  team:"국내B2G팀",          grade:"프로",   role:"팀원",   job:"공공영업",         perf:"B", pot:"C"},
+  {company:"소나무전자",  name:"조수선화",        hq:"테크본부",    team:"PM팀",               grade:"매니저", role:"팀원",   job:"PM",               perf:"A", pot:"A"},
+  {company:"소나무전자",  name:"최감",            hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"프로",   role:"팀원",   job:"콘텐츠 마케팅",    perf:"C", pot:"C"},
+  {company:"소나무전자",  name:"최철쭉",          hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"C", pot:"C"},
+  {company:"소나무전자",  name:"강국화",          hq:"세일즈본부",  team:"국내B2G팀",          grade:"프로",   role:"팀원",   job:"공공영업",         perf:"A", pot:"C"},
+  {company:"은행나무은행",name:"임라일락",        hq:"테크본부",    team:"인프라팀",           grade:"프로",   role:"팀원",   job:"클라우드 엔지니어",perf:"A", pot:"A"},
+  {company:"느티실업",    name:"박체리",          hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"B", pot:"C"},
+  {company:"은행나무은행",name:"조고구마",        hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"프로",   role:"팀원",   job:"퍼포먼스 마케팅",  perf:"C", pot:"B"},
+  {company:"단풍증권",    name:"임사과",          hq:"테크본부",    team:"S/W팀",              grade:"프로",   role:"팀원",   job:"백엔드 개발",      perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"장바나나",        hq:"세일즈본부",  team:"국내B2G팀",          grade:"매니저", role:"팀원",   job:"공공영업",         perf:"A", pot:"S"},
+  {company:"느티실업",    name:"정국화",          hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"C", pot:"B"},
+  {company:"단풍증권",    name:"이시금치",        hq:"세일즈본부",  team:"해외B2G팀",          grade:"프로",   role:"팀원",   job:"글로벌 공공영업",  perf:"A", pot:"B"},
+  {company:"은행나무은행",name:"이진달래",        hq:"세일즈본부",  team:"해외B2G팀",          grade:"프로",   role:"팀원",   job:"글로벌 공공영업",  perf:"A", pot:"B"},
+  {company:"소나무전자",  name:"정목련",          hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"프로",   role:"팀원",   job:"퍼포먼스 마케팅",  perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"김배추",          hq:"경영본부",    team:"인사팀",             grade:"프로",   role:"팀원",   job:"HRBP",             perf:"A", pot:"C"},
+  {company:"느티실업",    name:"장라일락",        hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"프로",   role:"팀원",   job:"CRM 마케팅",       perf:"C", pot:"B"},
+  {company:"느티실업",    name:"윤개나리",        hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"S", pot:"C"},
+  {company:"느티실업",    name:"장가지",          hq:"경영본부",    team:"총무팀",             grade:"프로",   role:"팀원",   job:"총무",             perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"정장미",          hq:"경영본부",    team:"총무팀",             grade:"프로",   role:"팀원",   job:"총무",             perf:"D", pot:"B"},
+  {company:"은행나무은행",name:"임셀러리",        hq:"세일즈본부",  team:"국내B2B팀",          grade:"프로",   role:"팀원",   job:"B2B 영업",         perf:"A", pot:"B"},
+  {company:"소나무전자",  name:"정라일락",        hq:"경영본부",    team:"인사팀",             grade:"프로",   role:"팀원",   job:"HRBP",             perf:"A", pot:"A"},
+  {company:"소나무전자",  name:"이무화과",        hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"A", pot:"B"},
+  {company:"단풍증권",    name:"최벚꽃",          hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"매니저", role:"팀원",   job:"퍼포먼스 마케팅",  perf:"C", pot:"S"},
+  {company:"은행나무은행",name:"정튤립",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"프로",   role:"팀원",   job:"CRM 마케팅",       perf:"B", pot:"B"},
+  {company:"느티실업",    name:"임멜론",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"프로",   role:"팀원",   job:"CRM 마케팅",       perf:"A", pot:"C"},
+  {company:"느티실업",    name:"강국화",          hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"S", pot:"B"},
+  {company:"단풍증권",    name:"조연근",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"프로",   role:"팀원",   job:"콘텐츠 마케팅",    perf:"A", pot:"S"},
+  {company:"단풍증권",    name:"윤석류",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"프로",   role:"팀원",   job:"콘텐츠 마케팅",    perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"조오이",          hq:"세일즈본부",  team:"국내B2G팀",          grade:"매니저", role:"팀원",   job:"공공영업",         perf:"B", pot:"S"},
+  {company:"은행나무은행",name:"조진달래",        hq:"경영본부",    team:"인사팀",             grade:"프로",   role:"팀원",   job:"HRBP",             perf:"B", pot:"C"},
+  {company:"소나무전자",  name:"윤배추",          hq:"테크본부",    team:"인프라팀",           grade:"매니저", role:"팀원",   job:"클라우드 엔지니어",perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"강상추",          hq:"테크본부",    team:"S/W팀",              grade:"프로",   role:"팀원",   job:"백엔드 개발",      perf:"B", pot:"B"},
+  {company:"소나무전자",  name:"장자두",          hq:"경영본부",    team:"경영기획팀",         grade:"프로",   role:"팀원",   job:"전략기획",         perf:"C", pot:"B"},
+  {company:"느티실업",    name:"조토마토",        hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"매니저", role:"팀원",   job:"콘텐츠 마케팅",    perf:"B", pot:"B"},
+  {company:"느티실업",    name:"정연근",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"매니저", role:"팀원",   job:"콘텐츠 마케팅",    perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"최사과",          hq:"세일즈본부",  team:"해외B2B팀",          grade:"매니저", role:"팀원",   job:"해외영업",         perf:"B", pot:"C"},
+  {company:"은행나무은행",name:"임코스모스",      hq:"마케팅본부",  team:"브랜드마케팅팀",     grade:"프로",   role:"팀원",   job:"브랜드 마케팅",    perf:"A", pot:"B"},
+  {company:"소나무전자",  name:"정매화",          hq:"세일즈본부",  team:"국내B2B팀",          grade:"프로",   role:"팀원",   job:"B2B 영업",         perf:"D", pot:"A"},
+  {company:"소나무전자",  name:"장참외",          hq:"테크본부",    team:"인프라팀",           grade:"프로",   role:"팀원",   job:"클라우드 엔지니어",perf:"B", pot:"A"},
+  {company:"단풍증권",    name:"장호박",          hq:"세일즈본부",  team:"국내B2G팀",          grade:"매니저", role:"팀원",   job:"공공영업",         perf:"B", pot:"B"},
+  {company:"느티실업",    name:"최라일락",        hq:"테크본부",    team:"QA팀",               grade:"프로",   role:"팀원",   job:"QA 엔지니어",      perf:"B", pot:"A"},
+  {company:"단풍증권",    name:"조상추",          hq:"세일즈본부",  team:"국내B2B팀",          grade:"디렉터", role:"팀장",   job:"B2B 영업",         perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"최브로콜리",      hq:"세일즈본부",  team:"해외B2B팀",          grade:"디렉터", role:"팀장",   job:"해외영업",         perf:"A", pot:"B"},
+  {company:"느티실업",    name:"김라일락",        hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"디렉터", role:"팀장",   job:"퍼포먼스 마케팅",  perf:"C", pot:"B"},
+  {company:"은행나무은행",name:"강동백",          hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"디렉터", role:"팀장",   job:"퍼포먼스 마케팅",  perf:"D", pot:"A"},
+  {company:"느티실업",    name:"임개나리",        hq:"마케팅본부",  team:"퍼포먼스마케팅팀",   grade:"매니저", role:"팀장",   job:"퍼포먼스 마케팅",  perf:"C", pot:"D"},
+  {company:"단풍증권",    name:"정해바라기",      hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"매니저", role:"팀장",   job:"CRM 마케팅",       perf:"B", pot:"A"},
+  {company:"소나무전자",  name:"임백합",          hq:"마케팅본부",  team:"CRM마케팅팀",        grade:"디렉터", role:"팀장",   job:"CRM 마케팅",       perf:"S", pot:"B"},
+  {company:"단풍증권",    name:"강튤립",          hq:"테크본부",    team:"PM팀",               grade:"디렉터", role:"팀장",   job:"PM",               perf:"A", pot:"D"},
+  {company:"단풍증권",    name:"최튤립",          hq:"테크본부",    team:"PM팀",               grade:"매니저", role:"팀장",   job:"PM",               perf:"S", pot:"S"},
+  {company:"느티실업",    name:"임감자",          hq:"경영본부",    team:"경영기획팀",         grade:"매니저", role:"팀장",   job:"전략기획",         perf:"B", pot:"B"},
+  {company:"은행나무은행",name:"조참외",          hq:"마케팅본부",  team:"콘텐츠마케팅팀",     grade:"디렉터", role:"팀장",   job:"콘텐츠 마케팅",    perf:"B", pot:"S"},
+  {company:"단풍증권",    name:"강진달래",        hq:"마케팅본부",  team:"브랜드마케팅팀",     grade:"매니저", role:"팀장",   job:"브랜드 마케팅",    perf:"A", pot:"B"},
+  {company:"느티실업",    name:"박상추",          hq:"테크본부",    team:"S/W팀",              grade:"매니저", role:"팀장",   job:"백엔드 개발",      perf:"A", pot:"C"},
+  {company:"소나무전자",  name:"이수선화",        hq:"경영본부",    team:"재무팀",             grade:"디렉터", role:"팀장",   job:"재무",             perf:"A", pot:"C"},
+  {company:"소나무전자",  name:"윤석류",          hq:"세일즈본부",  team:"국내B2B팀",          grade:"디렉터", role:"팀장",   job:"B2B 영업",         perf:"C", pot:"A"},
+  {company:"은행나무은행",name:"조아스파라거스",  hq:"테크본부",    team:"S/W팀",              grade:"디렉터", role:"팀장",   job:"백엔드 개발",      perf:"B", pot:"C"},
+  {company:"느티실업",    name:"조양파",          hq:"경영본부",    team:"인사팀",             grade:"매니저", role:"팀장",   job:"HRBP",             perf:"A", pot:"B"},
+  {company:"단풍증권",    name:"최코스모스",      hq:"경영본부",    team:"재무팀",             grade:"디렉터", role:"팀장",   job:"재무",             perf:"B", pot:"A"}
+];
+
+/* =====================================================
+   9-Box 전략 데이터
+===================================================== */
+const MATRIX_DATA = {
+    "high-high":   { emoji:"👑", title:"차세대 리더 (Top Talent)",
+        desc:"성과와 잠재력이 모두 최상위 수준입니다. 조직의 핵심 자산으로서 리더십 파이프라인의 중심에 위치해야 하며, 승계 계획(Succession Planning)의 1순위 대상입니다.",
+        strategies:["승계 계획(Succession Plan)에 우선 등록하여 차세대 리더로 육성","C-Level 임원과의 멘토링 프로그램 연결로 전략적 시각 개발","글로벌 프로젝트 또는 Cross-functional 리더십 기회 제공","고급 리더십 교육 프로그램 및 외부 코칭 지원"]},
+    "medium-high": { emoji:"⭐", title:"성장 리더 후보 (Future Star)",
+        desc:"잠재력은 매우 높지만 현재 성과는 보통 수준입니다. 적절한 지원과 도전적 환경이 주어지면 빠르게 Top Talent로 성장할 수 있는 인재입니다.",
+        strategies:["현재 역할이 강점과 일치하는지 Job Fit 재검토","현재 역량보다 조금 높은 수준의 스트레치 목표 부여","성과 격차 원인 파악을 위한 정기적 1:1 코칭 실시","소규모 프로젝트 리더 경험으로 성과 연결 기회 제공"]},
+    "low-high":    { emoji:"🌱", title:"원석 인재 (Rough Diamond)",
+        desc:"잠재력은 높지만 현재 성과는 낮은 상태입니다. 올바른 환경과 육성 투자가 이루어진다면 크게 성장할 수 있는 원석과 같은 인재입니다.",
+        strategies:["성과 저하 원인을 면밀히 진단 (역량 부족 vs 동기 문제)","성과에 직결되는 핵심 역량 교육을 우선적으로 지원","실패를 두려워하지 않는 심리적 안전감 조성","빠른 성공 경험을 통한 자신감 회복을 위한 단기 목표 설정"]},
+    "high-medium": { emoji:"💪", title:"우수 성과자 (High Performer)",
+        desc:"성과는 높지만 잠재력이 중간 수준입니다. 현재 역할에서 탁월한 결과를 내고 있으며 조직의 실질적인 성과를 견인하는 핵심 인재입니다.",
+        strategies:["현재 높은 기여에 대한 명확한 보상 체계 운영","리더십 역량 개발 가능성을 함께 탐색","현재 분야에서 더 깊은 전문성 개발 지원","다양한 부서 경험으로 시야 확장 기회 제공"]},
+    "medium-medium":{ emoji:"🔧", title:"핵심 실무자 (Core Player)",
+        desc:"성과와 잠재력 모두 중간 수준의 안정적인 인재입니다. 조직의 허리를 구성하는 Core Player로서 꾸준한 기여가 강점입니다.",
+        strategies:["개인의 내적 동기와 경력 목표를 명확히 파악","단계적으로 난이도를 높이는 점진적 도전 과제 부여","팀 내 중요한 역할을 맡겨 소속감과 책임감 강화","관심 분야의 교육 및 자격증 취득 지원"]},
+    "low-medium":  { emoji:"❓", title:"딜레마 인재 (Inconsistent Player)",
+        desc:"잠재력은 중간이지만 성과가 낮아 일관성이 부족한 상태입니다. 조기 개입을 통해 잠재력을 성과로 연결시키는 것이 중요합니다.",
+        strategies:["성과 저하 원인을 개인 요인과 환경 요인으로 구분하여 분석","구체적이고 측정 가능한 단기 성과 목표를 함께 설정","주기적 피드백으로 방향성 유지를 위한 정기적 1:1 미팅","PIP(성과개선계획) 또는 집중 지원 프로그램 운영"]},
+    "high-low":    { emoji:"🏆", title:"전문가 (Expert/Specialist)",
+        desc:"성과는 매우 높지만 잠재력이 낮은 유형입니다. 현재 역할에서 최고의 전문성을 발휘하는 인재로, 전문가 트랙이 더 적합합니다.",
+        strategies:["관리직 대신 전문직 승진 경로를 공식적으로 설계","멘토링 또는 사내 강의를 통한 지식 전파 역할 부여","기술 전문가 인증 및 차별화된 보상 체계 운영","이탈 방지를 위한 장기 보상 및 처우 개선"]},
+    "medium-low":  { emoji:"🔒", title:"안정 실무자 (Steady Worker)",
+        desc:"성과는 보통이고 잠재력이 낮은 상태로, 현재 역할에 안정적으로 정착한 유형입니다. 안정적인 환경 제공에 초점을 맞춰야 합니다.",
+        strategies:["현재 직무에서의 효율성과 만족도 유지에 집중","팀 내 역할의 중요성을 지속적으로 인정하고 격려","반복 업무의 효율화를 통한 성과 안정성 확보","장기적인 커리어 방향에 대한 솔직한 대화 진행"]},
+    "low-low":     { emoji:"⚠️", title:"저성과자 (Under Performer)",
+        desc:"성과와 잠재력이 모두 낮은 상태로, 즉각적인 개입이 필요합니다. 외부 요인을 확인한 후 체계적인 개선 계획을 수립해야 합니다.",
+        strategies:["현재 상황에 대한 솔직하고 구체적인 면담 즉시 실시","명확한 기준과 기간을 설정한 공식 성과개선계획(PIP) 수립","역할 불일치 여부를 확인하고 적합한 포지션 탐색","개선이 없을 시 적절한 인사 조치 절차 준비"]}
+};
+
+/* =====================================================
+   상태 변수
+===================================================== */
+let selectedEmployee  = null;
+let evaluationHistory = [];
+let autocompleteIndex = -1;
+let selectedBoxKey    = null;
+
+/* =====================================================
+   등급 변환 (S,A=높음 / B=보통 / C,D=낮음)
+===================================================== */
+function gradeToLevel(g) {
+    if (g === "S" || g === "A") return "high";
+    if (g === "B")              return "medium";
+    return "low";
+}
+
+function getBoxKey(emp) {
+    return `${gradeToLevel(emp.perf)}-${gradeToLevel(emp.pot)}`;
+}
+
+/* =====================================================
+   페이지 로드 시 박스별 인원 수 표시
+===================================================== */
+function initBoxCounts() {
+    const keys = ["high-high","medium-high","low-high",
+                  "high-medium","medium-medium","low-medium",
+                  "high-low","medium-low","low-low"];
+    keys.forEach(k => {
+        const count = EMPLOYEES.filter(e => getBoxKey(e) === k).length;
+        const el = document.getElementById(`cnt-${k}`);
+        if (el) el.textContent = count;
+    });
+}
+
+/* =====================================================
+   계열사 변경 → 구성원 목록 갱신 + 박스 카운트 갱신
+===================================================== */
+function onCompanyChange() {
+    // 검색 초기화
+    document.getElementById('nameInput').value = '';
+    document.getElementById('autocompleteList').innerHTML = '';
+    document.getElementById('autocompleteList').classList.remove('show');
+    document.getElementById('selectedCard').classList.remove('show');
+    document.getElementById('errorMsg').classList.remove('show');
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('resultCard').classList.remove('show');
+    selectedEmployee = null;
+
+    // 박스 클릭 패널 닫기
+    closeBoxPanel();
+    clearHighlight();
+
+    const company = document.getElementById('companySelect').value;
+
+    // 박스별 카운트 갱신
+    updateBoxCounts(company);
+
+    // 구성원 목록 갱신
+    renderMemberList(company);
+}
+
+function updateBoxCounts(company) {
+    const pool = company ? EMPLOYEES.filter(e => e.company === company) : EMPLOYEES;
+    const keys = ["high-high","medium-high","low-high",
+                  "high-medium","medium-medium","low-medium",
+                  "high-low","medium-low","low-low"];
+    keys.forEach(k => {
+        const count = pool.filter(e => getBoxKey(e) === k).length;
+        const el = document.getElementById(`cnt-${k}`);
+        if (el) el.textContent = count;
+    });
+}
+
+/* =====================================================
+   계열사 구성원 목록 렌더링 (가나다순)
+===================================================== */
+function renderMemberList(company) {
+    const section = document.getElementById('memberListSection');
+    const listEl  = document.getElementById('memberList');
+    const titleEl = document.getElementById('memberListTitle');
+    const badgeEl = document.getElementById('memberCountBadge');
+
+    if (!company) {
+        section.style.display = 'none';
+        return;
+    }
+
+    const members = EMPLOYEES
+        .filter(e => e.company === company)
+        .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+    titleEl.textContent = `${company} 구성원`;
+    badgeEl.textContent = `${members.length}명`;
+    section.style.display = 'block';
+
+    if (members.length === 0) {
+        listEl.innerHTML = '<div class="member-list-empty">구성원이 없습니다.</div>';
+        return;
+    }
+
+    listEl.innerHTML = members.map(emp => {
+        const idx = EMPLOYEES.indexOf(emp);
+        return `
+        <div class="member-chip" id="chip-${idx}" onclick="selectEmployeeFromChip(${idx})">
+            <div>
+                <div class="chip-name">${emp.name}</div>
+                <div class="chip-meta">${emp.team} · ${emp.grade} (${emp.role})</div>
+            </div>
+            <div class="chip-grades">
+                <span class="chip-grade perf">성과 ${emp.perf}</span>
+                <span class="chip-grade pot">잠재력 ${emp.pot}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function selectEmployeeFromChip(idx) {
+    document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
+    const chip = document.getElementById(`chip-${idx}`);
+    if (chip) chip.classList.add('selected');
+    selectEmployee(idx);
+}
+
+/* =====================================================
+   자동완성
+===================================================== */
+function onNameInput() {
+    const company = document.getElementById('companySelect').value;
+    const query   = document.getElementById('nameInput').value.trim();
+    const list    = document.getElementById('autocompleteList');
+
+    selectedEmployee = null;
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('selectedCard').classList.remove('show');
+    document.getElementById('errorMsg').classList.remove('show');
+    document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
+
+    if (!query) { list.innerHTML = ''; list.classList.remove('show'); return; }
+
+    const filtered = EMPLOYEES.filter(e =>
+        (!company || e.company === company) && e.name.includes(query)
+    );
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="autocomplete-item" style="color:#999;">검색 결과가 없습니다.</div>';
+        list.classList.add('show');
+        return;
+    }
+
+    list.innerHTML = filtered.map(e => {
+        const idx = EMPLOYEES.indexOf(e);
+        return `
+        <div class="autocomplete-item" onclick="selectEmployee(${idx})">
+            <strong>${e.name}</strong>
+            <div class="sub">${e.company} · ${e.team} · ${e.grade} (${e.role})</div>
+        </div>`;
+    }).join('');
+    list.classList.add('show');
+    autocompleteIndex = -1;
+}
+
+function onNameKeydown(e) {
+    const list  = document.getElementById('autocompleteList');
+    const items = list.querySelectorAll('.autocomplete-item');
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        autocompleteIndex = Math.min(autocompleteIndex + 1, items.length - 1);
+        items.forEach((item, i) => item.classList.toggle('active-item', i === autocompleteIndex));
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        autocompleteIndex = Math.max(autocompleteIndex - 1, 0);
+        items.forEach((item, i) => item.classList.toggle('active-item', i === autocompleteIndex));
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (autocompleteIndex >= 0 && items[autocompleteIndex]) items[autocompleteIndex].click();
+        else if (selectedEmployee) analyzeTalent();
+    } else if (e.key === 'Escape') {
+        list.classList.remove('show');
+    }
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.autocomplete-wrapper'))
+        document.getElementById('autocompleteList').classList.remove('show');
+});
+
+/* =====================================================
+   직원 선택 (공통)
+===================================================== */
+function selectEmployee(idx) {
+    const emp = EMPLOYEES[idx];
+    selectedEmployee = emp;
+
+    document.getElementById('nameInput').value = emp.name;
+    document.getElementById('autocompleteList').classList.remove('show');
+
+    // 미리보기 카드
+    document.getElementById('cardName').textContent = `👤 ${emp.name}`;
+    document.getElementById('cardTags').innerHTML = `
+        <span class="tag">${emp.company}</span>
+        <span class="tag">${emp.grade} / ${emp.role}</span>
+        <span class="tag">${emp.team}</span>
+        <span class="tag grade-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
+        <span class="tag grade-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
+    `;
+    document.getElementById('selectedCard').classList.add('show');
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('errorMsg').classList.remove('show');
+
+    // 목록 칩 동기화
+    document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
+    const chip = document.getElementById(`chip-${idx}`);
+    if (chip) {
+        chip.classList.add('selected');
+        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+/* =====================================================
+   인재 분석 실행
+===================================================== */
+function analyzeTalent() {
+    if (!selectedEmployee) return;
+    const emp  = selectedEmployee;
+    const pLv  = gradeToLevel(emp.perf);
+    const potLv = gradeToLevel(emp.pot);
+    const key  = `${pLv}-${potLv}`;
+    const data = MATRIX_DATA[key];
+
+    // 매트릭스 하이라이트 (노란색 = 분석 대상)
+    clearHighlight();
+    const box = document.getElementById(`box-${key}`);
+    if (box) { box.classList.add('active'); }
+
+    // 결과 카드
+    document.getElementById('resultEmoji').textContent = data.emoji;
+    document.getElementById('resultTitle').textContent = data.title;
+    document.getElementById('resultEmpInfo').innerHTML =
+        `${emp.company} · ${emp.hq} · ${emp.team}<br>${emp.grade} / ${emp.role} · ${emp.job}`;
+    document.getElementById('gradeBadges').innerHTML = `
+        <span class="grade-badge">📊 성과등급: ${emp.perf}</span>
+        <span class="grade-badge">🌱 잠재력등급: ${emp.pot}</span>
+    `;
+    document.getElementById('resultDescription').textContent = data.desc;
+    document.getElementById('strategyList').innerHTML =
+        data.strategies.map(s => `<div class="strategy-item">• ${s}</div>`).join('');
+
+    const rc = document.getElementById('resultCard');
+    rc.classList.remove('show');
+    void rc.offsetWidth;
+    rc.classList.add('show');
+
+    // 박스 클릭 패널 닫기
+    closeBoxPanel();
+
+    addHistory(emp, data);
+}
+
+/* =====================================================
+   박스 클릭 → 해당 인원 목록 표시
+===================================================== */
+function onBoxClick(perfLv, potLv) {
+    const key     = `${perfLv}-${potLv}`;
+    const data    = MATRIX_DATA[key];
+    const company = document.getElementById('companySelect').value;
+
+    // 토글 기능
+    if (selectedBoxKey === key && document.getElementById('boxPeoplePanel').classList.contains('show')) {
+        closeBoxPanel();
+        return;
+    }
+    selectedBoxKey = key;
+
+    // 박스 선택 표시
+    document.querySelectorAll('.matrix-box').forEach(b => b.classList.remove('box-selected'));
+    const clickedBox = document.getElementById(`box-${key}`);
+    if (clickedBox && !clickedBox.classList.contains('active')) {
+        clickedBox.classList.add('box-selected');
+    }
+
+    // 해당 박스 인원 필터링
+    const pool = company ? EMPLOYEES.filter(e => e.company === company) : EMPLOYEES;
+    const people = pool
+        .filter(e => getBoxKey(e) === key)
+        .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+    // 패널 헤더
+    const scope = company ? company : '전체';
+    document.getElementById('boxPeopleTitle').innerHTML =
+        `${data.emoji} ${data.title} &nbsp;<span style="font-size:0.82rem;color:#888;font-weight:400;">${scope} · ${people.length}명</span>`;
+
+    // 인원 카드 렌더링
+    const grid = document.getElementById('peopleGrid');
+    if (people.length === 0) {
+        grid.innerHTML = '<div class="people-empty">해당 박스에 속한 구성원이 없습니다.</div>';
+    } else {
+        grid.innerHTML = people.map(emp => {
+            const idx = EMPLOYEES.indexOf(emp);
+            return `
+            <div class="people-card" onclick="selectEmployee(${idx}); document.getElementById('analyzeBtn').click();">
+                <div class="pc-name">👤 ${emp.name}</div>
+                <div class="pc-meta">
+                    ${emp.company}<br>
+                    ${emp.team}<br>
+                    ${emp.grade} / ${emp.role}
+                </div>
+                <div class="pc-grades">
+                    <span class="pc-grade perf">성과 ${emp.perf}</span>
+                    <span class="pc-grade pot">잠재력 ${emp.pot}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // 패널 표시
+    const panel = document.getElementById('boxPeoplePanel');
+    panel.classList.remove('show');
+    void panel.offsetWidth;
+    panel.classList.add('show');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeBoxPanel() {
+    document.getElementById('boxPeoplePanel').classList.remove('show');
+    document.querySelectorAll('.matrix-box').forEach(b => b.classList.remove('box-selected'));
+    selectedBoxKey = null;
+}
+
+function clearHighlight() {
+    document.querySelectorAll('.matrix-box').forEach(b => {
+        b.classList.remove('active');
+        b.classList.remove('box-selected');
+    });
+    selectedBoxKey = null;
+}
+
+/* =====================================================
+   이력 관리
+===================================================== */
+function addHistory(emp, data) {
+    const ts = new Date().toLocaleString('ko-KR');
+    evaluationHistory.unshift({ emp, data, ts });
+    if (evaluationHistory.length > 10) evaluationHistory.pop();
+    renderHistory();
+}
+
+function renderHistory() {
+    const el = document.getElementById('historyList');
+    if (evaluationHistory.length === 0) {
+        el.innerHTML = '<div class="empty-history">아직 조회 이력이 없습니다.</div>';
+        return;
+    }
+    el.innerHTML = evaluationHistory.map(h => `
+        <div class="history-item">
+            <div class="h-name">👤 ${h.emp.name}
+                <span style="font-weight:400;font-size:0.8rem;color:#aaa;">(${h.emp.company})</span>
+            </div>
+            <div class="h-box">${h.data.emoji} ${h.data.title}</div>
+            <div class="h-meta">성과 ${h.emp.perf} · 잠재력 ${h.emp.pot} · ${h.ts}</div>
+        </div>
+    `).join('');
+}
+
+function clearHistory() {
+    if (evaluationHistory.length === 0) { alert('삭제할 이력이 없습니다.'); return; }
+    if (confirm('모든 조회 이력을 삭제하시겠습니까?')) { evaluationHistory = []; renderHistory(); }
+}
+
+/* =====================================================
+   초기화
+===================================================== */
+document.addEventListener('DOMContentLoaded', function() {
+    initBoxCounts();
+    renderHistory();
+});
+</script>
+</body>
+</html>
