@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talent Calibration Simulator - Enhanced</title>
+    <title>Talent Calibration Simulator - Final</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+.footer {
+    text-align: center;
+    padding: 18px;
+    color: #999;
+    font-size: 0.82rem;
+    border-top: 1px solid #eee;
+}
 
-        body {
-            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
+body {
+    font-family: 'Pretendard', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
 
         .container {
             max-width: 1300px;
@@ -32,7 +41,7 @@
             text-align: center;
         }
         .header h1 { font-size: 2.2rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .header p  { font-size: 1rem; opacity: 0.92; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+       .header p  { font-size: 0.9rem; opacity: 0.92; max-width: none; margin: 0 auto; line-height: 1.6; white-space: nowrap; }
 
         /* 메인 레이아웃 */
         .main-content {
@@ -122,11 +131,13 @@
             border-radius: 20px; padding: 3px 11px;
             font-size: 0.76rem; font-weight: 600;
         }
-        .tag.grade-s { background: #fff3cd; color: #856404; }
-        .tag.grade-a { background: #d1f2eb; color: #0e6655; }
-        .tag.grade-b { background: #d6eaf8; color: #1a5276; }
-        .tag.grade-c { background: #fdebd0; color: #784212; }
-        .tag.grade-d { background: #fadbd8; color: #922b21; }
+
+        /* 🎨 등급별 색상 시스템 (요청사항 반영) */
+        .color-s { background: #8b5cf6; color: white; border: 1px solid rgba(0,0,0,0.1); } /* S: 보라색 */
+        .color-a { background: #4dd6d2; color: white; border: 1px solid rgba(0,0,0,0.1); } /* A: 민트색 */
+        .color-b { background: #10b981; color: white; border: 1px solid rgba(0,0,0,0.1); } /* B: 초록색 */
+        .color-c { background: #facc15; color: #333;   border: 1px solid rgba(0,0,0,0.1); } /* C: 노란색 (가독성을 위해 검은 글씨) */
+        .color-d { background: #ef4444; color: white; border: 1px solid rgba(0,0,0,0.1); } /* D: 빨간색 */
 
         .analyze-btn {
             width: 100%; padding: 13px;
@@ -204,8 +215,6 @@
             font-size: 0.72rem;
             font-weight: 700;
         }
-        .chip-grade.perf { background: #fff3cd; color: #856404; }
-        .chip-grade.pot  { background: #d1f2eb; color: #0e6655; }
 
         .member-list-empty {
             text-align: center;
@@ -240,14 +249,15 @@
         }
 
         /* 9-Box 그리드 */
-        .matrix-container {
-            display: grid;
-            grid-template-columns: 48px 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr 36px;
-            gap: 8px;
-            max-width: 540px;
-            margin: 0 auto 24px;
-        }
+.matrix-container {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 36px;
+    gap: 10px;
+    max-width: 600px;
+    margin: 0 auto 24px;
+}
+
         .matrix-box {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border: 2px solid #dee2e6;
@@ -257,7 +267,9 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            height: 96px;
+              aspect-ratio: 1 / 1;
+    height: auto;
+    word-break: keep-all;
             font-weight: 600;
             font-size: 0.8rem;
             color: #6c757d;
@@ -280,14 +292,12 @@
             box-shadow: 0 10px 28px rgba(243,156,18,0.45);
             z-index: 2;
         }
-        /* 박스 클릭 하이라이트 (파란색 테두리) */
         .matrix-box.box-selected {
             border-color: #4facfe;
             box-shadow: 0 0 0 3px rgba(79,172,254,0.3);
         }
         .matrix-box .emoji { font-size: 1.35rem; margin-bottom: 4px; }
 
-        /* 박스 내 인원 수 뱃지 */
         .box-count {
             position: absolute;
             top: 5px; right: 7px;
@@ -300,16 +310,83 @@
         }
         .matrix-box.active .box-count { background: rgba(0,0,0,0.15); }
 
+/* ── 9-Box 등급별 은은한 색상 강조 ── */
+
+/* S급 (보라): 차세대 리더, 우수 성과자 */
+.matrix-box.grade-s {
+    background: radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), #f9fafb 60%);
+    border-color: rgba(139, 92, 246, 0.25);
+}
+.matrix-box.grade-s:hover:not(.active) {
+    background: radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.18), #f4f6f8 60%);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* A급 (민트): 성장 리더, 원석 */
+.matrix-box.grade-a {
+    background: radial-gradient(circle at 15% 10%, rgba(77, 214, 210, 0.15), #f9fafb 60%);
+    border-color: rgba(77, 214, 210, 0.3);
+}
+.matrix-box.grade-a:hover:not(.active) {
+    background: radial-gradient(circle at 15% 10%, rgba(77, 214, 210, 0.22), #f4f6f8 60%);
+    border-color: rgba(77, 214, 210, 0.45);
+}
+
+/* B급 (초록): 핵심 실무자, 전문가 */
+.matrix-box.grade-b {
+    background: radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.12), #f9fafb 60%);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+.matrix-box.grade-b:hover:not(.active) {
+    background: radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.18), #f4f6f8 60%);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* C급 (노랑): 딜레마, 안정 실무자 */
+.matrix-box.grade-c {
+    background: radial-gradient(circle at 15% 10%, rgba(250, 204, 21, 0.15), #f9fafb 60%);
+    border-color: rgba(250, 204, 21, 0.3);
+}
+.matrix-box.grade-c:hover:not(.active) {
+    background: radial-gradient(circle at 15% 10%, rgba(250, 204, 21, 0.22), #f4f6f8 60%);
+    border-color: rgba(250, 204, 21, 0.45);
+}
+
+/* D급 (빨강): 저성과자 */
+.matrix-box.grade-d {
+    background: radial-gradient(circle at 15% 10%, rgba(239, 68, 68, 0.12), #f9fafb 60%);
+    border-color: rgba(239, 68, 68, 0.25);
+}
+.matrix-box.grade-d:hover:not(.active) {
+    background: radial-gradient(circle at 15% 10%, rgba(239, 68, 68, 0.18), #f4f6f8 60%);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* 기존 active/box-selected 스타일 우선순위 유지 */
+.matrix-box.active {
+    background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
+    border-color: #f39c12 !important;
+}
+.matrix-box.box-selected {
+    border-color: #4facfe !important;
+    box-shadow: 0 0 0 3px rgba(79,172,254,0.3) !important;
+}
+
+        /* Y축 레이블 수정 (올바른 방향) */
         .axis-label-y {
             grid-row: 1/4; grid-column: 1;
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
+            display: flex; align-items: center; justify-content: center;
             text-align: center;
             font-weight: 700;
             font-size: 0.82rem;
             color: #6c757d;
-            display: flex; align-items: center; justify-content: center;
         }
+        .axis-label-y span {
+            transform: rotate(-90deg);
+            white-space: nowrap;
+            display: block;
+        }
+
         .axis-label-x {
             grid-row: 4; grid-column: 2/5;
             text-align: center;
@@ -340,7 +417,6 @@
         .grade-badge {
             padding: 5px 14px; border-radius: 20px;
             font-size: 0.82rem; font-weight: 700;
-            background: rgba(255,255,255,0.22);
         }
         .description-box {
             background: rgba(255,255,255,0.12); border-radius: 10px;
@@ -400,15 +476,467 @@
             border-radius: 5px; padding: 2px 8px;
             font-size: 0.72rem; font-weight: 700;
         }
-        .pc-grade.perf { background: #fff3cd; color: #856404; }
-        .pc-grade.pot  { background: #d1f2eb; color: #0e6655; }
         .people-empty {
             text-align: center; color: #aaa;
             font-style: italic; padding: 20px 0; font-size: 0.9rem;
             grid-column: 1/-1;
         }
+/* ── 등급 색상 범례 ── */
+.grade-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: rgba(248, 249, 250, 0.8);
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 0.82rem;
+}
 
-        /* 이력 섹션 */
+.legend-title {
+    font-weight: 700;
+    color: #495057;
+    margin-right: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-text {
+    color: #555;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* 기존 color 클래스 업데이트 (A등급 색상 반영) */
+.color-a { background: #4dd6d2; color: white; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* ═════════════════════════════════════════════════════════
+           [추가] 부서/팀 필터 · 등급 분포 대시보드 · 다중 직원 비교
+           (기존 스타일/색상/폰트와 동일한 변수만 사용)
+        ═════════════════════════════════════════════════════════ */
+
+        /* ── 부서/팀 필터 (control-panel 내부) ── */
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 480px) { .filter-row { grid-template-columns: 1fr; } }
+        .filter-reset-btn {
+            align-self: flex-end;
+            padding: 9px 12px;
+            background: white;
+            color: #4facfe;
+            border: 2px solid #4facfe;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+        .filter-reset-btn:hover { background: #4facfe; color: white; }
+        .filter-active-info {
+            background: #e8f4ff;
+            border: 1px solid #4facfe;
+            border-radius: 8px;
+            padding: 8px 11px;
+            font-size: 0.8rem;
+            color: #495057;
+            line-height: 1.5;
+            display: none;
+        }
+        .filter-active-info.show { display: block; }
+        .filter-active-info b { color: #4facfe; }
+
+        /* ── 등급 분포 통계 대시보드 ── */
+        .stats-section {
+            background: white;
+            border-radius: 15px;
+            padding: 22px;
+            border: 1px solid #e9ecef;
+        }
+        .stats-section > h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .stats-subtitle {
+            text-align: center;
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-bottom: 18px;
+        }
+
+        /* KPI 카드 그리드 */
+        .stats-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        @media (max-width: 720px) { .stats-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stats-kpi {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            border-radius: 12px;
+            padding: 14px 15px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .stats-kpi:hover { border-color: #4facfe; transform: translateY(-2px); }
+        .stats-kpi .kpi-label {
+            font-size: 0.76rem;
+            color: #888;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .stats-kpi .kpi-value {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #495057;
+            line-height: 1.1;
+        }
+        .stats-kpi .kpi-sub {
+            font-size: 0.72rem;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        /* 차트 행 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        @media (max-width: 720px) { .stats-row { grid-template-columns: 1fr; } }
+        .stats-chart-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .stats-chart-card h3 {
+            color: #495057;
+            font-size: 0.95rem;
+            margin-bottom: 14px;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 8px;
+        }
+
+        /* 가로 막대(성과/잠재력) */
+        .grade-bar-row {
+            display: grid;
+            grid-template-columns: 32px 1fr 60px;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 9px;
+            font-size: 0.85rem;
+        }
+        .grade-bar-row .gb-label {
+            font-weight: 700;
+            text-align: center;
+            padding: 4px 0;
+            border-radius: 5px;
+        }
+        .grade-bar-row .gb-track {
+            background: #e9ecef;
+            border-radius: 8px;
+            height: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        .grade-bar-row .gb-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 6px;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .grade-bar-row .gb-count {
+            text-align: right;
+            font-size: 0.82rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        /* 등급별 인원 칩 도넛 대체 막대 (등급 구성) */
+        .grade-dist-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .grade-dist-row .gd-label {
+            width: 70px;
+            font-weight: 600;
+            color: #555;
+        }
+        .grade-dist-row .gd-track {
+            flex: 1;
+            height: 22px;
+            background: #e9ecef;
+            border-radius: 11px;
+            overflow: hidden;
+            display: flex;
+        }
+        .grade-dist-row .gd-seg {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            transition: all 0.4s;
+        }
+        .grade-dist-row .gd-count {
+            width: 50px;
+            text-align: right;
+            font-size: 0.82rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        /* 팀별 분포 테이블 */
+        .stats-team-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .stats-team-table th,
+        .stats-team-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .stats-team-table th {
+            background: #4facfe;
+            color: white;
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+        .stats-team-table tr:hover td { background: #f0f8ff; }
+        .stats-team-table .num-cell { text-align: right; }
+
+        /* ── 다중 직원 비교 분석 ── */
+        .compare-section {
+            background: white;
+            border-radius: 15px;
+            padding: 22px;
+            border: 1px solid #e9ecef;
+        }
+        .compare-section > h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .compare-hint {
+            text-align: center;
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+        .compare-selected-wrap {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            min-height: 56px;
+        }
+        .compare-empty {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+            font-size: 0.88rem;
+            padding: 12px 0;
+        }
+        .compare-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+        .compare-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            border: 1.5px solid #4facfe;
+            color: #4facfe;
+            border-radius: 18px;
+            padding: 5px 10px 5px 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .compare-tag .ct-remove {
+            cursor: pointer;
+            color: #aaa;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 2px;
+        }
+        .compare-tag .ct-remove:hover { color: #ef4444; }
+
+        .compare-controls {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            margin-bottom: 18px;
+            align-items: end;
+        }
+        @media (max-width: 600px) {
+            .compare-controls { grid-template-columns: 1fr; }
+        }
+        .compare-btn {
+            padding: 11px 16px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .compare-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,172,254,0.4); }
+        .compare-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .compare-clear-btn {
+            padding: 11px 14px;
+            background: white;
+            color: #c0392b;
+            border: 2px solid #f5c6cb;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .compare-clear-btn:hover { background: #fff5f5; }
+
+        /* 비교 결과 테이블 */
+        .compare-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            background: white;
+        }
+        .compare-table th,
+        .compare-table td {
+            padding: 11px 13px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .compare-table th {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+        }
+        .compare-table th:first-child,
+        .compare-table td:first-child {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #495057;
+            min-width: 130px;
+        }
+        .compare-table tbody tr:hover td { background: #f0f8ff; }
+        .compare-table tbody tr:hover td:first-child { background: #e8f4ff; }
+
+        /* 9-Box 위치 미니 표시 */
+        .mini-box {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: white;
+            line-height: 22px;
+            text-align: center;
+            margin-right: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* 비교 인원 헤더 칩 */
+        .compare-cell-name {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .compare-cell-name .cc-name { font-weight: 700; font-size: 0.92rem; color: #333; }
+        .compare-cell-name .cc-sub { font-size: 0.76rem; color: #888; }
+
+        /* 비교 결과 컨테이너 (초기 상태) */
+        .compare-result-empty {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+            padding: 18px;
+            font-size: 0.9rem;
+        }
+        .compare-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .compare-summary-card {
+            background: #f8f9fa;
+            border: 1.5px solid #e9ecef;
+            border-left: 4px solid #4facfe;
+            border-radius: 10px;
+            padding: 13px 15px;
+        }
+        .compare-summary-card .csc-title {
+            font-weight: 700;
+            color: #495057;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .compare-summary-card .csc-text {
+            font-size: 0.84rem;
+            color: #666;
+            line-height: 1.55;
+        }
+
+        /* ── 이력 섹션 */
         .history-section {
             margin: 0 24px 24px;
             background: #f8f9fa;
@@ -460,7 +988,6 @@
         <div class="control-panel">
             <h2>🔍 직원 검색</h2>
 
-            <!-- 계열사 선택 -->
             <div class="form-group">
                 <label for="companySelect">계열사 선택</label>
                 <select id="companySelect" onchange="onCompanyChange()">
@@ -472,7 +999,6 @@
                 </select>
             </div>
 
-            <!-- 이름 검색 -->
             <div class="form-group">
                 <label for="nameInput">구성원 이름 검색</label>
                 <div class="autocomplete-wrapper">
@@ -485,7 +1011,6 @@
                 </div>
             </div>
 
-            <!-- 선택된 직원 미리보기 -->
             <div class="selected-card" id="selectedCard">
                 <div class="card-name" id="cardName"></div>
                 <div class="card-tags" id="cardTags"></div>
@@ -497,7 +1022,7 @@
                 🚀 인재 분석 실행
             </button>
 
-            <!-- ── 계열사 구성원 목록 ── -->
+            <!-- 계열사 구성원 목록 -->
             <div class="member-list-section" id="memberListSection" style="display:none;">
                 <div class="member-list-header">
                     <span id="memberListTitle">구성원 목록</span>
@@ -505,57 +1030,106 @@
                 </div>
                 <div class="member-list" id="memberList"></div>
             </div>
+
+            <!-- [추가] 부서 / 팀 필터 -->
+            <div style="border-top:1px solid #dee2e6;padding-top:14px;">
+                <div class="member-list-header" style="margin-bottom:10px;">
+                    <span style="font-weight:700;color:#495057;font-size:0.93rem;">🏢 부서 / 팀 필터</span>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label for="hqSelect">본부 (부서)</label>
+                    <select id="hqSelect" onchange="onHqChange()">
+                        <option value="">전체 본부</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label for="teamSelect">팀</label>
+                    <select id="teamSelect" onchange="applyFilters()">
+                        <option value="">전체 팀</option>
+                    </select>
+                </div>
+                <button class="filter-reset-btn" onclick="resetFilters()" style="width:100%;">
+                    ↺ 필터 초기화
+                </button>
+                <div class="filter-active-info" id="filterActiveInfo"></div>
+            </div>
         </div>
 
         <!-- ── 오른쪽 패널 ── -->
         <div class="right-panel">
 
-            <!-- 9-Box Matrix -->
-            <div class="matrix-section">
+              <div class="matrix-section">
                 <h2>📊 9-Box Matrix</h2>
                 <p class="matrix-hint">박스를 클릭하면 해당 인원을 확인할 수 있습니다</p>
 
+                <!-- 등급 색상 범례 -->
+                <div class="grade-legend">
+                    <span class="legend-title">등급 범례:</span>
+                    <div class="legend-item">
+                        <div class="legend-dot color-s">S</div>
+                        <span class="legend-text">최우수</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot color-a">A</div>
+                        <span class="legend-text">우수</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot color-b">B</div>
+                        <span class="legend-text">양호</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot color-c">C</div>
+                        <span class="legend-text">주의</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot color-d">D</div>
+                        <span class="legend-text">개선필요</span>
+                    </div>
+                </div>
+
                 <div class="matrix-container">
-                    <div class="axis-label-y">잠재력 (Potential) ↑</div>
+
+                    <!-- Y축 레이블 -->
+                    <div class="axis-label-y"><span>잠재력 (Potential) ↑</span></div>
 
                     <!-- 높은 잠재력 행 -->
-                    <div class="matrix-box" id="box-low-high"    onclick="onBoxClick('low','high')">
+                   <div class="matrix-box grade-a" id="box-low-high" onclick="onBoxClick('low','high')">
                         <span class="box-count" id="cnt-low-high">0</span>
                         <div class="emoji">🌱</div><div>원석<br>(Rough Diamond)</div>
                     </div>
-                    <div class="matrix-box" id="box-medium-high" onclick="onBoxClick('medium','high')">
+                    <div class="matrix-box grade-a" id="box-medium-high" onclick="onBoxClick('medium','high')">
                         <span class="box-count" id="cnt-medium-high">0</span>
                         <div class="emoji">⭐</div><div>성장 리더<br>(Future Star)</div>
                     </div>
-                    <div class="matrix-box" id="box-high-high"   onclick="onBoxClick('high','high')">
+                    <div class="matrix-box grade-s" id="box-high-high" onclick="onBoxClick('high','high')">
                         <span class="box-count" id="cnt-high-high">0</span>
                         <div class="emoji">👑</div><div>차세대 리더<br>(Top Talent)</div>
                     </div>
 
                     <!-- 중간 잠재력 행 -->
-                    <div class="matrix-box" id="box-low-medium"    onclick="onBoxClick('low','medium')">
+                    <div class="matrix-box grade-c" id="box-low-medium" onclick="onBoxClick('low','medium')">
                         <span class="box-count" id="cnt-low-medium">0</span>
                         <div class="emoji">❓</div><div>딜레마<br>(Inconsistent)</div>
                     </div>
-                    <div class="matrix-box" id="box-medium-medium" onclick="onBoxClick('medium','medium')">
+                    <div class="matrix-box grade-b" id="box-medium-medium" onclick="onBoxClick('medium','medium')">
                         <span class="box-count" id="cnt-medium-medium">0</span>
                         <div class="emoji">🔧</div><div>핵심 실무자<br>(Core Player)</div>
                     </div>
-                    <div class="matrix-box" id="box-high-medium"   onclick="onBoxClick('high','medium')">
+                    <div class="matrix-box grade-s" id="box-high-medium" onclick="onBoxClick('high','medium')">
                         <span class="box-count" id="cnt-high-medium">0</span>
                         <div class="emoji">💪</div><div>우수 성과자<br>(High Performer)</div>
                     </div>
 
                     <!-- 낮은 잠재력 행 -->
-                    <div class="matrix-box" id="box-low-low"    onclick="onBoxClick('low','low')">
+                    <div class="matrix-box grade-d" id="box-low-low" onclick="onBoxClick('low','low')">
                         <span class="box-count" id="cnt-low-low">0</span>
                         <div class="emoji">⚠️</div><div>저성과자<br>(Under Performer)</div>
                     </div>
-                    <div class="matrix-box" id="box-medium-low" onclick="onBoxClick('medium','low')">
+                    <div class="matrix-box grade-c" id="box-medium-low" onclick="onBoxClick('medium','low')">
                         <span class="box-count" id="cnt-medium-low">0</span>
                         <div class="emoji">🔒</div><div>안정 실무자<br>(Steady Worker)</div>
                     </div>
-                    <div class="matrix-box" id="box-high-low"   onclick="onBoxClick('high','low')">
+                    <div class="matrix-box grade-b" id="box-high-low" onclick="onBoxClick('high','low')">
                         <span class="box-count" id="cnt-high-low">0</span>
                         <div class="emoji">🏆</div><div>전문가<br>(Expert)</div>
                     </div>
@@ -593,6 +1167,92 @@
         </div>
     </div>
 
+    <!-- [추가] 등급 분포 통계 대시보드 -->
+    <div class="stats-section">
+        <h2>📈 등급 분포 통계</h2>
+        <p class="stats-subtitle" id="statsSubtitle">현재 필터 적용 기준 · <b id="statsTotal">100</b>명</p>
+
+        <div class="stats-kpi-grid">
+            <div class="stats-kpi">
+                <div class="kpi-label">전체 인원</div>
+                <div class="kpi-value" id="kpiTotal">100</div>
+                <div class="kpi-sub">총 분석 대상</div>
+            </div>
+            <div class="stats-kpi">
+                <div class="kpi-label">🏆 Top Talent</div>
+                <div class="kpi-value" id="kpiTop">0</div>
+                <div class="kpi-sub">차세대 리더 (high-high)</div>
+            </div>
+            <div class="stats-kpi">
+                <div class="kpi-label">⭐ Future Star</div>
+                <div class="kpi-value" id="kpiFuture">0</div>
+                <div class="kpi-sub">성장 리더 (medium-high)</div>
+            </div>
+            <div class="stats-kpi">
+                <div class="kpi-label">⚠️ Risk</div>
+                <div class="kpi-value" id="kpiRisk">0</div>
+                <div class="kpi-sub">저성과자 (low-low)</div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stats-chart-card">
+                <h3>성과 등급 분포</h3>
+                <div id="perfDistBars"></div>
+            </div>
+            <div class="stats-chart-card">
+                <h3>잠재력 등급 분포</h3>
+                <div id="potDistBars"></div>
+            </div>
+        </div>
+
+        <div class="stats-chart-card" style="margin-bottom:18px;">
+            <h3>직급별 분포</h3>
+            <div id="gradeDistBars"></div>
+        </div>
+
+        <div class="stats-chart-card" style="margin-bottom:0;">
+            <h3>팀별 인원 (팀원 기준 상위)</h3>
+            <div style="max-height:280px;overflow-y:auto;">
+                <table class="stats-team-table" id="statsTeamTable">
+                    <thead>
+                        <tr>
+                            <th>팀</th>
+                            <th>본부</th>
+                            <th class="num-cell">인원</th>
+                            <th class="num-cell">평균성과</th>
+                            <th class="num-cell">평균잠재력</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTeamTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- [추가] 다중 직원 비교 분석 -->
+    <div class="compare-section">
+        <h2>🔍 다중 직원 비교 분석</h2>
+        <p class="compare-hint">구성원 목록 또는 검색에서 직원을 클릭해 비교 대상에 추가한 뒤 비교 버튼을 눌러주세요 (최대 5명).</p>
+
+        <div class="compare-selected-wrap">
+            <div class="compare-empty" id="compareEmpty">비교할 직원이 선택되지 않았습니다.</div>
+            <div class="compare-tags" id="compareTags"></div>
+        </div>
+
+        <div class="compare-controls">
+            <input type="text" id="compareSearchInput" placeholder="이름으로 추가 검색 (예: 이백합)"
+                   style="padding:11px 13px;border:2px solid #e9ecef;border-radius:8px;font-size:0.95rem;font-family:inherit;background:white;width:100%;"
+                   oninput="onCompareSearchInput()" autocomplete="off">
+            <button class="compare-btn" id="compareBtn" onclick="runComparison()" disabled>📊 비교 실행</button>
+            <button class="compare-clear-btn" onclick="clearComparison()">초기화</button>
+        </div>
+
+        <div id="compareSearchResults" style="display:none;background:white;border:1.5px solid #e9ecef;border-radius:8px;max-height:200px;overflow-y:auto;margin-bottom:14px;"></div>
+
+        <div id="compareResult"></div>
+    </div>
+
     <!-- 조회 이력 -->
     <div class="history-section">
         <div class="history-header">
@@ -602,6 +1262,10 @@
         <div class="history-grid" id="historyList">
             <div class="empty-history">아직 조회 이력이 없습니다.</div>
         </div>
+    </div>
+    <!-- 푸터 -->
+    <div class="footer">
+        © 2026 최유미 Yumi CHOI. All rights reserved.
     </div>
 
 </div>
@@ -856,8 +1520,8 @@ function renderMemberList(company) {
                 <div class="chip-meta">${emp.team} · ${emp.grade} (${emp.role})</div>
             </div>
             <div class="chip-grades">
-                <span class="chip-grade perf">성과 ${emp.perf}</span>
-                <span class="chip-grade pot">잠재력 ${emp.pot}</span>
+                <span class="chip-grade color-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
+                <span class="chip-grade color-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
             </div>
         </div>`;
     }).join('');
@@ -871,7 +1535,7 @@ function selectEmployeeFromChip(idx) {
 }
 
 /* =====================================================
-   자동완성
+   자동완성 및 검색창 초기화 제어
 ===================================================== */
 function onNameInput() {
     const company = document.getElementById('companySelect').value;
@@ -884,7 +1548,14 @@ function onNameInput() {
     document.getElementById('errorMsg').classList.remove('show');
     document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
 
-    if (!query) { list.innerHTML = ''; list.classList.remove('show'); return; }
+    if (!query) {
+        list.innerHTML = '';
+        list.classList.remove('show');
+        clearHighlight(); 
+        document.getElementById('resultCard').classList.remove('show'); 
+        closeBoxPanel(); 
+        return;
+    }
 
     const filtered = EMPLOYEES.filter(e =>
         (!company || e.company === company) && e.name.includes(query)
@@ -949,8 +1620,8 @@ function selectEmployee(idx) {
         <span class="tag">${emp.company}</span>
         <span class="tag">${emp.grade} / ${emp.role}</span>
         <span class="tag">${emp.team}</span>
-        <span class="tag grade-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
-        <span class="tag grade-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
+        <span class="tag color-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
+        <span class="tag color-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
     `;
     document.getElementById('selectedCard').classList.add('show');
     document.getElementById('analyzeBtn').disabled = false;
@@ -976,7 +1647,7 @@ function analyzeTalent() {
     const key  = `${pLv}-${potLv}`;
     const data = MATRIX_DATA[key];
 
-    // 매트릭스 하이라이트 (노란색 = 분석 대상)
+    // 매트릭스 하이라이트
     clearHighlight();
     const box = document.getElementById(`box-${key}`);
     if (box) { box.classList.add('active'); }
@@ -987,8 +1658,8 @@ function analyzeTalent() {
     document.getElementById('resultEmpInfo').innerHTML =
         `${emp.company} · ${emp.hq} · ${emp.team}<br>${emp.grade} / ${emp.role} · ${emp.job}`;
     document.getElementById('gradeBadges').innerHTML = `
-        <span class="grade-badge">📊 성과등급: ${emp.perf}</span>
-        <span class="grade-badge">🌱 잠재력등급: ${emp.pot}</span>
+        <span class="grade-badge color-${emp.perf.toLowerCase()}">📊 성과등급: ${emp.perf}</span>
+        <span class="grade-badge color-${emp.pot.toLowerCase()}">🌱 잠재력등급: ${emp.pot}</span>
     `;
     document.getElementById('resultDescription').textContent = data.desc;
     document.getElementById('strategyList').innerHTML =
@@ -1054,8 +1725,8 @@ function onBoxClick(perfLv, potLv) {
                     ${emp.grade} / ${emp.role}
                 </div>
                 <div class="pc-grades">
-                    <span class="pc-grade perf">성과 ${emp.perf}</span>
-                    <span class="pc-grade pot">잠재력 ${emp.pot}</span>
+                    <span class="pc-grade color-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
+                    <span class="pc-grade color-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
                 </div>
             </div>`;
         }).join('');
@@ -1118,10 +1789,459 @@ function clearHistory() {
 /* =====================================================
    초기화
 ===================================================== */
+/* =====================================================
+   [추가] 부서 / 팀 필터링 · 등급 분포 통계 · 다중 직원 비교
+   (기존 데이터/유틸 함수를 그대로 재사용)
+===================================================== */
+
+/* ---- 필터 활성 풀 ---- */
+let activeFilters = { company: null, hq: null, team: null };
+
+function getActivePool() {
+    return EMPLOYEES.filter(e => {
+        if (activeFilters.company && e.company !== activeFilters.company) return false;
+        if (activeFilters.hq && e.hq !== activeFilters.hq) return false;
+        if (activeFilters.team && e.team !== activeFilters.team) return false;
+        return true;
+    });
+}
+
+/* ---- 본부 select 채우기 (계열사 변경 시) ---- */
+function populateHqOptions() {
+    const company = document.getElementById('companySelect').value;
+    const pool = company ? EMPLOYEES.filter(e => e.company === company) : EMPLOYEES;
+    const hqs = [...new Set(pool.map(e => e.hq))].sort((a,b)=>a.localeCompare(b,'ko'));
+
+    const sel = document.getElementById('hqSelect');
+    const cur = activeFilters.hq;
+    sel.innerHTML = '<option value="">전체 본부</option>' +
+        hqs.map(h => `<option value="${h}"${h===cur?' selected':''}>${h}</option>`).join('');
+
+    if (cur && !hqs.includes(cur)) activeFilters.hq = null;
+    populateTeamOptions();
+}
+
+function onHqChange() {
+    activeFilters.hq = document.getElementById('hqSelect').value || null;
+    activeFilters.team = null;
+    populateTeamOptions();
+    applyFilters();
+}
+
+function populateTeamOptions() {
+    const company = document.getElementById('companySelect').value;
+    const hq = document.getElementById('hqSelect').value;
+    let pool = company ? EMPLOYEES.filter(e => e.company === company) : EMPLOYEES;
+    if (hq) pool = pool.filter(e => e.hq === hq);
+    const teams = [...new Set(pool.map(e => e.team))].sort((a,b)=>a.localeCompare(b,'ko'));
+
+    const sel = document.getElementById('teamSelect');
+    const cur = activeFilters.team;
+    sel.innerHTML = '<option value="">전체 팀</option>' +
+        teams.map(t => `<option value="${t}"${t===cur?' selected':''}>${t}</option>`).join('');
+    if (cur && !teams.includes(cur)) activeFilters.team = null;
+}
+
+function applyFilters() {
+    activeFilters.company = document.getElementById('companySelect').value || null;
+    activeFilters.team    = document.getElementById('teamSelect').value || null;
+
+    // 매트릭스 카운트 갱신
+    const filtered = getActivePool();
+    const keys = ["high-high","medium-high","low-high",
+                  "high-medium","medium-medium","low-medium",
+                  "high-low","medium-low","low-low"];
+    keys.forEach(k => {
+        const el = document.getElementById(`cnt-${k}`);
+        if (el) el.textContent = filtered.filter(e => getBoxKey(e) === k).length;
+    });
+
+    // 부서/팀 필터 활성 표시
+    const info = document.getElementById('filterActiveInfo');
+    const parts = [];
+    if (activeFilters.company) parts.push(`<b>계열사</b> ${activeFilters.company}`);
+    if (activeFilters.hq)      parts.push(`<b>본부</b> ${activeFilters.hq}`);
+    if (activeFilters.team)    parts.push(`<b>팀</b> ${activeFilters.team}`);
+    if (parts.length === 0) {
+        info.classList.remove('show');
+        info.innerHTML = '';
+    } else {
+        info.classList.add('show');
+        info.innerHTML = `🔎 적용 중: ${parts.join(' · ')} · ${filtered.length}명`;
+    }
+
+    renderStats(filtered);
+    refreshMemberListByFilter();
+}
+
+function resetFilters() {
+    activeFilters = { company: null, hq: null, team: null };
+    document.getElementById('hqSelect').value = '';
+    document.getElementById('teamSelect').value = '';
+    populateHqOptions();
+    applyFilters();
+    document.getElementById('filterActiveInfo').classList.remove('show');
+    document.getElementById('filterActiveInfo').innerHTML = '';
+}
+
+/* 계열사 변경 시 본부도 같이 갱신되도록 onCompanyChange 내용 확장 */
+const _orig_onCompanyChange = onCompanyChange;
+onCompanyChange = function() {
+    _orig_onCompanyChange();
+    activeFilters.company = document.getElementById('companySelect').value || null;
+    activeFilters.hq = null;
+    activeFilters.team = null;
+    populateHqOptions();
+    applyFilters();
+};
+
+function refreshMemberListByFilter() {
+    /* 계열사가 선택되어 있을 때만 구성원 목록을 보여주는 기존 정책 유지.
+       필터로 좁혀진 결과를 목록에도 반영. */
+    const company = document.getElementById('companySelect').value;
+    if (!company) return;
+    const section = document.getElementById('memberListSection');
+    const listEl  = document.getElementById('memberList');
+    const titleEl = document.getElementById('memberListTitle');
+    const badgeEl = document.getElementById('memberCountBadge');
+
+    const pool = getActivePool();
+    titleEl.textContent = `${company} 구성원`;
+    badgeEl.textContent = `${pool.length}명`;
+    section.style.display = 'block';
+    if (pool.length === 0) {
+        listEl.innerHTML = '<div class="member-list-empty">필터 조건에 해당하는 구성원이 없습니다.</div>';
+        return;
+    }
+    listEl.innerHTML = pool.map(emp => {
+        const idx = EMPLOYEES.indexOf(emp);
+        return `
+        <div class="member-chip" id="chip-${idx}" onclick="selectEmployeeFromChip(${idx})">
+            <div>
+                <div class="chip-name">${emp.name}</div>
+                <div class="chip-meta">${emp.team} · ${emp.grade} (${emp.role})</div>
+            </div>
+            <div class="chip-grades">
+                <span class="chip-grade color-${emp.perf.toLowerCase()}">성과 ${emp.perf}</span>
+                <span class="chip-grade color-${emp.pot.toLowerCase()}">잠재력 ${emp.pot}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* =====================================================
+   [추가] 등급 분포 통계 대시보드
+===================================================== */
+function gradeNumeric(g) {
+    if (g === 'S') return 4;
+    if (g === 'A') return 3;
+    if (g === 'B') return 2;
+    if (g === 'C') return 1;
+    return 0; /* D */
+}
+
+function renderStats(pool) {
+    pool = pool || getActivePool();
+
+    /* 헤더 / KPI */
+    document.getElementById('statsTotal').textContent = pool.length;
+    document.getElementById('kpiTotal').textContent = pool.length;
+    document.getElementById('kpiTop').textContent    = pool.filter(e => getBoxKey(e)==='high-high').length;
+    document.getElementById('kpiFuture').textContent = pool.filter(e => getBoxKey(e)==='medium-high').length;
+    document.getElementById('kpiRisk').textContent   = pool.filter(e => getBoxKey(e)==='low-low').length;
+
+    const order = ['S','A','B','C','D'];
+    const colors = { S:'#8b5cf6', A:'#4dd6d2', B:'#10b981', C:'#facc15', D:'#ef4444' };
+
+    /* 성과 분포 바 */
+    const perfCounts = order.map(g => pool.filter(e => e.perf === g).length);
+    renderDistBars('perfDistBars', perfCounts, order, colors, pool.length);
+
+    /* 잠재력 분포 바 */
+    const potCounts = order.map(g => pool.filter(e => e.pot === g).length);
+    renderDistBars('potDistBars', potCounts, order, colors, pool.length);
+
+    /* 직급 분포 (스택형) */
+    const grades = ['임원','디렉터','매니저','프로'];
+    const gradeColors = { '임원':'#667eea', '디렉터':'#4facfe', '매니저':'#10b981', '프로':'#94a3b8' };
+    const gradeCounts = grades.map(g => pool.filter(e => e.grade === g).length);
+    const totalGr = gradeCounts.reduce((a,b)=>a+b,0);
+    const host = document.getElementById('gradeDistBars');
+    if (totalGr === 0) {
+        host.innerHTML = '<div style="color:#aaa;font-size:0.85rem;font-style:italic;padding:6px 0;">데이터 없음</div>';
+    } else {
+        host.innerHTML = grades.map((g, i) => {
+            const cnt = gradeCounts[i];
+            const pct = ((cnt / totalGr) * 100).toFixed(1);
+            return `
+            <div class="grade-dist-row">
+                <div class="gd-label">${g}</div>
+                <div class="gd-track">
+                    <div class="gd-seg" style="width:${pct}%;background:${gradeColors[g]};">${cnt>0 ? pct+'%' : ''}</div>
+                </div>
+                <div class="gd-count">${cnt}명</div>
+            </div>`;
+        }).join('');
+    }
+
+    /* 팀별 테이블 (필터 section을 통해 본부 보기 가능) — 여기서는 풀 기준으로 표시 */
+    const company = activeFilters.company;
+    let scoped = pool;
+    if (!company) scoped = pool; /* 전체면 전체 */
+    const teamMap = {};
+    scoped.forEach(e => {
+        if (!teamMap[e.team]) teamMap[e.team] = { team: e.team, hq: e.hq, count: 0, perfSum: 0, potSum: 0 };
+        teamMap[e.team].count++;
+        teamMap[e.team].perfSum += gradeNumeric(e.perf);
+        teamMap[e.team].potSum += gradeNumeric(e.pot);
+    });
+    const teamRows = Object.values(teamMap)
+        .map(r => ({ ...r, perfAvg: r.perfSum / r.count, potAvg: r.potSum / r.count }))
+        .sort((a,b) => b.count - a.count);
+
+    const tbody = document.getElementById('statsTeamTbody');
+    if (teamRows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#aaa;font-style:italic;padding:14px;">데이터 없음</td></tr>';
+    } else {
+        tbody.innerHTML = teamRows.map(r => {
+            const pAvg = r.perfAvg >= 3 ? 'A↑' : r.perfAvg >= 2 ? 'B' : 'C↓';
+            const tAvg = r.potAvg >= 3 ? 'A↑' : r.potAvg >= 2 ? 'B' : 'C↓';
+            return `<tr>
+                <td>${r.team}</td>
+                <td>${r.hq}</td>
+                <td class="num-cell">${r.count}명</td>
+                <td class="num-cell"><span class="mini-box" style="background:${avgColor(r.perfAvg,'perf')};">${pAvg}</span></td>
+                <td class="num-cell"><span class="mini-box" style="background:${avgColor(r.potAvg,'pot')};">${tAvg}</span></td>
+            </tr>`;
+        }).join('');
+    }
+}
+
+function avgColor(score, kind) {
+    if (score >= 3) return '#8b5cf6';
+    if (score >= 2) return '#10b981';
+    if (score >= 1) return '#facc15';
+    return '#ef4444';
+}
+
+function renderDistBars(hostId, counts, labels, colors, total) {
+    const host = document.getElementById(hostId);
+    if (total === 0) {
+        host.innerHTML = '<div style="color:#aaa;font-size:0.85rem;font-style:italic;padding:6px 0;">데이터 없음</div>';
+        return;
+    }
+    host.innerHTML = labels.map((g, i) => {
+        const cnt = counts[i];
+        const pct = (cnt / total) * 100;
+        return `
+        <div class="grade-bar-row">
+            <div class="gb-label" style="background:${colors[g]};color:${g==='C'?'#333':'white'};">${g}</div>
+            <div class="gb-track">
+                <div class="gb-fill" style="width:${Math.max(pct, 0)}%;background:${colors[g]};color:${g==='C'?'#333':'white'};">${pct>=8 ? pct.toFixed(0)+'%' : ''}</div>
+            </div>
+            <div class="gb-count">${cnt}명</div>
+        </div>`;
+    }).join('');
+}
+
+/* =====================================================
+   [추가] 다중 직원 비교 분석
+===================================================== */
+const compareList = [];   /* [{...emp}] */
+const COMPARE_MAX = 5;
+
+function tryAddToCompare(idx) {
+    if (compareList.some(e => e === EMPLOYEES[idx])) return;
+    if (compareList.length >= COMPARE_MAX) {
+        alert(`비교는 최대 ${COMPARE_MAX}명까지 가능합니다.`);
+        return;
+    }
+    compareList.push(EMPLOYEES[idx]);
+    renderCompareSelected();
+}
+
+function removeFromCompare(idx) {
+    const i = compareList.findIndex(e => e === EMPLOYEES[idx]);
+    if (i >= 0) {
+        compareList.splice(i, 1);
+        renderCompareSelected();
+    }
+}
+
+function renderCompareSelected() {
+    const empty = document.getElementById('compareEmpty');
+    const tags   = document.getElementById('compareTags');
+    const btn    = document.getElementById('compareBtn');
+
+    if (compareList.length === 0) {
+        empty.style.display = 'block';
+        tags.innerHTML = '';
+        btn.disabled = true;
+        return;
+    }
+    empty.style.display = 'none';
+    tags.innerHTML = compareList.map(emp => {
+        const idx = EMPLOYEES.indexOf(emp);
+        return `<span class="compare-tag">
+            👤 ${emp.name}
+            <span style="font-size:0.74rem;color:#888;font-weight:400;">(${emp.team})</span>
+            <span class="ct-remove" onclick="removeFromCompare(${idx})" title="제거">✕</span>
+        </span>`;
+    }).join('');
+    btn.disabled = false;
+}
+
+function clearComparison() {
+    compareList.length = 0;
+    renderCompareSelected();
+    document.getElementById('compareResult').innerHTML = '';
+    document.getElementById('compareSearchInput').value = '';
+    document.getElementById('compareSearchResults').style.display = 'none';
+}
+
+function onCompareSearchInput() {
+    const q = document.getElementById('compareSearchInput').value.trim();
+    const box = document.getElementById('compareSearchResults');
+    if (!q) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const results = EMPLOYEES
+        .filter(e => e.name.includes(q))
+        .filter(e => !compareList.includes(e))
+        .slice(0, 8);
+
+    if (results.length === 0) {
+        box.innerHTML = '<div style="padding:12px 14px;color:#999;font-size:0.85rem;text-align:center;">검색 결과가 없습니다.</div>';
+        box.style.display = 'block';
+        return;
+    }
+    box.innerHTML = results.map(emp => {
+        const idx = EMPLOYEES.indexOf(emp);
+        return `
+        <div onclick="tryAddToCompare(${idx})"
+             style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:0.88rem;"
+             onmouseover="this.style.background='#e8f4ff'" onmouseout="this.style.background='white'">
+            <b>${emp.name}</b>
+            <span style="color:#888;font-size:0.78rem;">· ${emp.company} · ${emp.team}</span>
+        </div>`;
+    }).join('');
+    box.style.display = 'block';
+}
+
+/* 직원 선택(검색/chip 클릭) 시 자동으로 비교 리스트에 1회성 추가 */
+const _orig_selectEmployee = selectEmployee;
+selectEmployee = function(idx) {
+    _orig_selectEmployee(idx);
+    if (!compareList.includes(EMPLOYEES[idx])) {
+        tryAddToCompare(idx);
+    }
+};
+
+function runComparison() {
+    if (compareList.length < 2) {
+        alert('2명 이상 선택해 주세요.');
+        return;
+    }
+    const host = document.getElementById('compareResult');
+
+    const keyOf = emp => `${gradeToLevel(emp.perf)}-${gradeToLevel(emp.pot)}`;
+    const descByKey = k => MATRIX_DATA[k] ? `${MATRIX_DATA[k].emoji} ${MATRIX_DATA[k].title}` : k;
+
+    const rows = [
+        { label: '회사',       get: e => e.company },
+        { label: '본부',       get: e => e.hq },
+        { label: '팀',         get: e => e.team },
+        { label: '직급',       get: e => e.grade },
+        { label: '역할',       get: e => e.role },
+        { label: '직무',       get: e => e.job },
+        { label: '성과 등급',  get: e => `<span class="mini-box color-${e.perf.toLowerCase()}">${e.perf}</span>` },
+        { label: '잠재력 등급',get: e => `<span class="mini-box color-${e.pot.toLowerCase()}">${e.pot}</span>` },
+        { label: '9-Box 위치', get: e => descByKey(keyOf(e)) },
+        { label: '점수(성과)', get: e => gradeNumeric(e.perf).toFixed(1) },
+        { label: '점수(잠재)', get: e => gradeNumeric(e.pot).toFixed(1) },
+    ];
+
+    const headCols = compareList.map(emp => `
+        <th>
+            <div class="compare-cell-name">
+                <div class="cc-name">${emp.name}</div>
+                <div class="cc-sub">${emp.company} · ${emp.grade}</div>
+            </div>
+        </th>`).join('');
+
+    const bodyRows = rows.map(r => `
+        <tr>
+            <td>${r.label}</td>
+            ${compareList.map(e => `<td>${r.get(e)}</td>`).join('')}
+        </tr>
+    `).join('');
+
+    /* 인사이트 요약 */
+    const avg = (arr, fn) => (arr.reduce((s,e)=>s+fn(e),0) / arr.length).toFixed(2);
+    const topPerformer = compareList.reduce((a,b)=> gradeNumeric(b.perf) > gradeNumeric(a.perf) ? b : a);
+    const topPotential = compareList.reduce((a,b)=> gradeNumeric(b.pot) > gradeNumeric(a.pot) ? b : a);
+    const strongest    = compareList.reduce((a,b)=>
+        (gradeNumeric(b.perf)+gradeNumeric(b.pot)) > (gradeNumeric(a.perf)+gradeNumeric(a.pot)) ? b : a
+    );
+
+    const compareBoxes = compareList.map(emp => `
+        <div class="compare-summary-card">
+            <div class="csc-title">👤 ${emp.name}</div>
+            <div class="csc-text">
+                ${emp.company} · ${emp.team}<br>
+                직급: ${emp.grade} / ${emp.role}<br>
+                📊 성과 <b style="color:${gradeColorFor(emp.perf)};">${emp.perf}</b> · 🌱 잠재력 <b style="color:${gradeColorFor(emp.pot)};">${emp.pot}</b><br>
+                <span style="display:inline-block;margin-top:6px;">${descByKey(keyOf(emp))}</span>
+            </div>
+        </div>
+    `).join('');
+
+    host.innerHTML = `
+        <div class="compare-table-wrap">
+            <table class="compare-table">
+                <thead><tr><th>항목</th>${headCols}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>
+        <div style="background:linear-gradient(135deg, #f8f9fa, #eef6ff);border-radius:10px;padding:16px;margin-top:18px;border:1px solid #e9ecef;">
+            <h4 style="color:#495057;font-size:1rem;margin-bottom:10px;">💡 비교 인사이트</h4>
+            <ul style="list-style:none;padding:0;margin:0;line-height:1.85;font-size:0.9rem;">
+                <li>🏆 <b>${strongest.name}</b> 님이 종합 점수(성과+잠재력) 최고입니다.</li>
+                <li>📈 최고 성과: <b>${topPerformer.name}</b> (성과 ${topPerformer.perf})</li>
+                <li>🌱 최대 잠재력: <b>${topPotential.name}</b> (잠재력 ${topPotential.pot})</li>
+                <li>📊 그룹 평균 — 성과 <b>${avg(compareList, e=>gradeNumeric(e.perf))}</b> / 잠재력 <b>${avg(compareList, e=>gradeNumeric(e.pot))}</b> (4점 만점)</li>
+            </ul>
+        </div>
+        <div class="compare-summary-cards">${compareBoxes}</div>
+    `;
+}
+
+function gradeColorFor(g) {
+    if (g === 'S') return '#8b5cf6';
+    if (g === 'A') return '#4dd6d2';
+    if (g === 'B') return '#10b981';
+    if (g === 'C') return '#facc15';
+    return '#ef4444';
+}
+
+/* =====================================================
+   [추가] 결과 카드의 "비교에 추가" 버튼 삽입
+===================================================== */
+const _orig_analyzeTalent = analyzeTalent;
+analyzeTalent = function() {
+    _orig_analyzeTalent();
+    /* 헤더 텍스트 옆에 비교 추가 버튼이 자연스럽도록 안내만 */
+};
+
+/* =====================================================
+   초기화 갱신 (기존 + 신규 통합 실행)
+===================================================== */
 document.addEventListener('DOMContentLoaded', function() {
-    initBoxCounts();
-    renderHistory();
+    initBoxCounts();          // 기존: 박스별 인원 수 표시
+    populateHqOptions();      // [추가] 본부/팀 select 초기값 채우기
+    renderStats();            // [추가] 등급 분포 통계 대시보드 초기화
+    renderCompareSelected();  // [추가] 비교 리스트 빈 상태 UI
+    renderHistory();          // 기존: 조회 이력 초기 렌더링
 });
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
